@@ -3,7 +3,7 @@
 ## Installation
 
 ```sh
-git clone https://github.com/Qredit/core-control
+git clone https://github.com/geopsllc/core-control -b qredit-mainnet
 cd core-control
 ./ccontrol.sh arg1 [arg2]
 ```
@@ -49,6 +49,9 @@ The end result is that your node will start syncing from 0.
 - Do not run as root!
 
 ## Changelog
+
+### 2.5
+- updated for core 2.5
 
 ### 2.4
 - fixed a bug in config reset
