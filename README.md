@@ -3,7 +3,7 @@
 ## Installation
 
 ```sh
-git clone https://github.com/Qredit/core-control -b qredit-v2
+git clone https://github.com/Qredit/core-control
 cd core-control
 ./ccontrol.sh arg1 [arg2]
 ```
