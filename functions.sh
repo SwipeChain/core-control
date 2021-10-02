@@ -723,6 +723,7 @@ qslp () {
 
       pm2 delete qslpApi > /dev/null 2>&1
       pm2 delete qslpParser > /dev/null 2>&1
+      pm2 save > /dev/null 2>&1
 
       rm -rf $HOME/qslp
 
