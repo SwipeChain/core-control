@@ -12,25 +12,26 @@ wrong_arguments () {
   echo -e "/ /___/ /_/ / /  /  __/  / /___/ /_/ / / / / /_/ /  / /_/ / /  "
   echo -e "\____/\____/_/   \___/   \____/\____/_/ /_/\__/_/   \____/_/   "
   echo -e "\nMissing: arg1 [arg2]\n"
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e "| arg1     | arg2                         | Description                        |"
-  echo -e " ------------------------------------------------------------------------------"
-  echo -e "| install  | core                         | Install Core                       |"
-  echo -e "| update   | core / self / check          | Update Core / Core-Control / Check |"
-  echo -e "| remove   | core / self                  | Remove Core / Core-Control         |"
-  echo -e "| secret   | set / clear                  | Delegate Secret Set / Clear        |"
-  echo -e "| start    | relay / forger / all         | Start Core Services                |"
-  echo -e "| restart  | relay / forger / all / safe  | Restart Core Services              |"
-  echo -e "| stop     | relay / forger / all         | Stop Core Services                 |"
-  echo -e "| status   | relay / forger / all         | Show Core Services Status          |"
-  echo -e "| logs     | relay / forger / all         | Show Core Logs                     |"
-  echo -e "| snapshot | create / restore             | Snapshot Create / Restore          |"
-  echo -e "| system   | info / update                | System Info / Update               |"
-  echo -e "| config   | reset                        | Reset Config Files to Defaults     |"
-  echo -e "| database | clear                        | Clear the Database                 |"
-  echo -e "| rollback |                              | Rollback to Specified Height       |"
-  echo -e "| plugin   | list / add / remove / update | Manage Core Plugins                |"
-  echo -e " ------------------------------------------------------------------------------\n"
+  echo -e " ------------------------------------------------------------------------------------------------"
+  echo -e "| arg1     | arg2                                           | Description                        |"
+  echo -e " ------------------------------------------------------------------------------------------------"
+  echo -e "| install  | core                                           | Install Core                       |"
+  echo -e "| update   | core / self / check                            | Update Core / Core-Control / Check |"
+  echo -e "| remove   | core / self                                    | Remove Core / Core-Control         |"
+  echo -e "| secret   | set / clear                                    | Delegate Secret Set / Clear        |"
+  echo -e "| start    | relay / forger / all                           | Start Core Services                |"
+  echo -e "| restart  | relay / forger / all / safe                    | Restart Core Services              |"
+  echo -e "| stop     | relay / forger / all                           | Stop Core Services                 |"
+  echo -e "| status   | relay / forger / all                           | Show Core Services Status          |"
+  echo -e "| logs     | relay / forger / all                           | Show Core Logs                     |"
+  echo -e "| snapshot | create / restore                               | Snapshot Create / Restore          |"
+  echo -e "| system   | info / update                                  | System Info / Update               |"
+  echo -e "| config   | reset                                          | Reset Config Files to Defaults     |"
+  echo -e "| database | clear                                          | Clear the Database                 |"
+  echo -e "| rollback |                                                | Rollback to Specified Height       |"
+  echo -e "| plugin   | list / add / remove / update                   | Manage Core Plugins                |"
+  echo -e "| qslp     | add / remove / update / start / stop / restart | Manage QSLP                        |"
+  echo -e " ------------------------------------------------------------------------------------------------\n"
   exit 1
 
 }
@@ -671,6 +672,132 @@ plugin_manage () {
     else
 
       echo -e "\n${red}Plugin $2 not installed.${nc}\n"
+
+    fi
+
+}
+
+qslp () {
+
+    local envFile="$config/.env"
+    local whtrue="$(cat $envFile | grep 'CORE_WEBHOOKS_ENABLED=true' )"
+    local astatus=$(pm2status "qslpApi" | awk '{print $4}')
+    local pstatus=$(pm2status "qslpParser" | awk '{print $4}')
+
+    if [[ "$1" = "add" && ! -d $HOME/qslp ]]; then
+
+      if [ -z "$whtrue" ]; then
+        echo "CORE_WEBHOOKS_ENABLED=true" >> "$envFile" 2>&1
+      fi
+
+      sudo apt update > /dev/null 2>&1
+      sudo apt install -y curl dirmngr apt-transport-https lsb-release ca-certificates cmatrix mongodb redis-server
+
+      sudo ufw allow 8001/tcp > /dev/null 2>&1
+
+      git clone https://github.com/qredit/qslp $HOME/qslp
+      cd $HOME/qslp
+      cp qslp.ini.example qslp.ini
+      yarn install
+
+      sed -i "/^pg_username/c pg_username = '$USER'" $HOME/qslp/qslp.ini > /dev/null 2>&1
+
+      echo -e "\n${green}QSLP installed with default settings.${nc}\n"
+      echo -e "${red}Restart Core before starting QSLP for the first time.${nc}\n"
+
+    elif [[ "$1" = "add" && -d $HOME/qslp ]]; then
+
+      echo -e "\n${red}QSLP already installed.${nc}\n"
+
+
+    elif [[ "$1" = "remove" && -d $HOME/qslp ]]; then
+
+
+      if [ ! -z "$whtrue" ]; then
+        sed -i '/CORE_WEBHOOKS_ENABLED=true/d' $envFile > /dev/null 2>&1
+      fi
+
+      sudo apt update > /dev/null 2>&1
+
+      sudo ufw delete allow 8001/tcp > /dev/null 2>&1
+
+      pm2 delete qslpApi > /dev/null 2>&1
+      pm2 delete qslpParser > /dev/null 2>&1
+
+      rm -rf $HOME/qslp
+
+      echo -e "\n${green}QSLP removed successfully.${nc}\n"
+      echo -e "${red}Restart Core to disable wenhooks.${nc}\n"
+
+    elif [[ "$1" = "update" && -d $HOME/qslp ]]; then
+
+      cd $HOME/qslp > /dev/null 2>&1
+      git_check
+
+      if [ "$up2date" = "yes" ]; then
+        echo -e "Already up-to-date."
+        exit 1
+      fi
+
+      git pull
+      yarn install
+
+      echo -e "\n${green}QSLP updated successfully.${nc}\n"
+      echo -e "${red}Restart QSLP for the changes to take effect.${nc}\n"
+
+    elif [[ "$1" = "start" && -d $HOME/qslp ]]; then
+
+      cd $HOME/qslp > /dev/null 2>&1
+
+      if [ "$pstatus" != "online" ]; then
+        pm2 start qslpParser.js > /dev/null 2>&1
+      else
+        echo -e "\n${red}qslpParser already running. Skipping...${nc}"
+      fi
+
+      sleep 2
+
+      if [ "$astatus" != "online" ]; then
+        pm2 start qslpApi.js > /dev/null 2>&1
+      else
+        echo -e "\n${red}qslpApi already running. Skipping...${nc}"
+      fi
+
+      pm2 save > /dev/null 2>&1
+
+    elif [[ "$1" = "stop" && -d $HOME/qslp ]]; then
+
+      if [ "$astatus" = "online" ]; then
+        pm2 stop qslpApi > /dev/null 2>&1
+      else
+        echo -e "\n${red}qslpApi not running. Skipping...${nc}"
+      fi
+
+      if [ "$pstatus" = "online" ]; then
+        pm2 stop qslpParser > /dev/null 2>&1
+      else
+        echo -e "\n${red}qslpParser not running. Skipping...${nc}"
+      fi
+
+    elif [[ "$1" = "restart" && -d $HOME/qslp ]]; then
+
+      if [ "$pstatus" = "online" ]; then
+        pm2 restart qslpParser > /dev/null 2>&1
+      else
+        echo -e "\n${red}qslpParser not running. Skipping...${nc}"
+      fi
+
+      sleep 2
+
+      if [ "$astatus" = "online" ]; then
+        pm2 restart qslpApi > /dev/null 2>&1
+      else
+        echo -e "\n${red}qslpApi not running. Skipping...${nc}"
+      fi
+
+    else
+
+      echo -e "\n${red}QSLP not installed.${nc}\n"
 
     fi
 
