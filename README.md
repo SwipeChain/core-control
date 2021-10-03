@@ -25,6 +25,7 @@ cd core-control
 | `database` | `clear` | Clear the Database |
 | `rollback` | | Rollback to Specified Height |
 | `plugin` | `list`/`add`/`remove`/`update` | Manage Core Plugins |
+| `qslp` | `add`/`remove`/`update`/`start`/`stop`/`restart` | Manage QSLP |
 
 ## General
 This is a Streamlined CLI-Based Core v2 Management Tool. 
@@ -50,6 +51,9 @@ The end result is that your node will start syncing from 0.
 - Do not run as root!
 
 ## Changelog
+
+### 2.7.1
+- add qslp management
 
 ### 2.7
 - minor fixes for 2.7
