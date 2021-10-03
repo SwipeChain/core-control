@@ -287,6 +287,17 @@ main () {
       plugin_manage $2 $3
     fi
 
+  elif [[ ( "$1" = "qslp" ) && ( "$2" = "add" || "$2" = "remove" || "$2" = "update" || "$2" = "start" || "$2" = "stop" || "$2" = "restart" ) && ( -z "$3" ) ]]; then
+
+    if [[ ! -d $data || ! -d $core ]]; then
+      echo -e "\n${red}Core not installed. Please install first.${nc}\n"
+      exit 1
+    fi
+
+    qslp $2
+
+    echo -e "\n${green}All Done!${nc}\n"
+
   else
 
     wrong_arguments
