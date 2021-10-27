@@ -30,7 +30,6 @@ wrong_arguments () {
   echo -e "| database | clear                                          | Clear the Database                 |"
   echo -e "| rollback |                                                | Rollback to Specified Height       |"
   echo -e "| plugin   | list / add / remove / update                   | Manage Core Plugins                |"
-  echo -e "| qslp     | add / remove / update / start / stop / restart | Manage QSLP                        |"
   echo -e " ------------------------------------------------------------------------------------------------\n"
   exit 1
 
