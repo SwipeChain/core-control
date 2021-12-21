@@ -1,9 +1,25 @@
-# Core v2 Management Tool - Qredit Mainnet
+# Core v3 Management Tool - SwipeChain Devnet
+
+## Requirements
+
+- Ubuntu 20+
+- 4 CPU with a minimum 16 GB of RAM
+- Create a user with sudo rights
+- Do not run core-control on root
+
+## Example of adding a new user
+
+
+```sh
+adduser swipechain
+usermod -aG sudo swipechain
+su swipechain
+```
 
 ## Installation
 
 ```sh
-git clone https://github.com/Qredit/core-control
+git clone https://github.com/SwipeChain/core-control -b swipe-devnet
 cd core-control
 ./ccontrol.sh arg1 [arg2]
 ```
